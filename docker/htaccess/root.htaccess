@@ -1,0 +1,43 @@
+# ===== Tienda eSIM - .htaccess raíz =====
+Options -Indexes
+DirectoryIndex index.html index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # --- Forzar HTTPS (OPCIONAL): descomenta las 2 líneas siguientes cuando tengas SSL ---
+  # RewriteCond %{HTTPS} !=on
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # Detrás de un proxy (Railway) usa en su lugar:
+  # RewriteCond %{HTTP:X-Forwarded-Proto} =http
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Bloquear acceso directo a carpetas sensibles
+  RewriteRule ^(config|sql|cron|docs|docker|api/_lib|uploads/private)(/|$) - [F,L]
+  # Bloquear archivos ocultos y de respaldo
+  RewriteRule (^|/)\.(?!well-known) - [F,L]
+  RewriteRule \.(sql|bak|log|ini|sh|md|lock|csv)$ - [F,L]
+  RewriteRule ^(Dockerfile|railway\.json|railway\.toml)$ - [F,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/svg+xml "access plus 7 days"
+  ExpiresByType image/webp "access plus 7 days"
+  ExpiresByType image/png "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 7 days"
+  ExpiresByType text/css "access plus 1 day"
+  ExpiresByType application/javascript "access plus 1 day"
+</IfModule>
+
+<FilesMatch "(^composer\.|\.env|README\.md|schema\.sql)$">
+  Require all denied
+</FilesMatch>
+
