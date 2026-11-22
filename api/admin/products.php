@@ -29,7 +29,7 @@ function slugify(string $s): string {
 function product_data(array $in): array {
     $d = ['name' => str_in($in, 'name', 180), 'short_description' => str_in($in, 'short_description', 300), 'description' => str_in($in, 'description', 10000),
         'price' => round((float)($in['price'] ?? 0), 2), 'compare_price' => ($in['compare_price'] ?? '') === '' || $in['compare_price'] === null ? null : round((float)$in['compare_price'], 2),
-        'type' => in_array($in['type'] ?? '', ['esim', 'fisico'], true) ? $in['type'] : '', 'stock' => max(0, (int)($in['stock'] ?? 0)),
+        'type' => in_array($in['type'] ?? '', ['esim', 'fisico', 'electronicos'], true) ? $in['type'] : '', 'stock' => max(0, (int)($in['stock'] ?? 0)),
         'category_id' => (int)($in['category_id'] ?? 0), 'company_id' => (int)($in['company_id'] ?? 0),
         'available' => !empty($in['available']) ? 1 : 0, 'active' => !empty($in['active']) ? 1 : 0, 'featured' => !empty($in['featured']) ? 1 : 0, 'is_example' => !empty($in['is_example']) ? 1 : 0];
     if (mb_strlen($d['name']) < 3) fail('El nombre es obligatorio (mín. 3 caracteres)', 422);
@@ -63,7 +63,7 @@ switch ($action) {
     case 'quick':  // cambio rápido de precio / stock / activo
         $id = (int)($in['id'] ?? 0);
         if (isset($in['price'])) { $p = round((float)$in['price'], 2); if ($p <= 0) fail('Precio inválido', 422); $pdo->prepare('UPDATE products SET price=? WHERE id=?')->execute([$p, $id]); }
-        if (isset($in['stock'])) $pdo->prepare("UPDATE products SET stock=? WHERE id=? AND type='fisico'")->execute([max(0, (int)$in['stock']), $id]);
+        if (isset($in['stock'])) $pdo->prepare("UPDATE products SET stock=? WHERE id=? AND type IN ('fisico','electronicos')")->execute([max(0, (int)$in['stock']), $id]);
         if (isset($in['active'])) $pdo->prepare('UPDATE products SET active=? WHERE id=?')->execute([$in['active'] ? 1 : 0, $id]);
         audit(admin_name(), 'producto_rapido', 'product', $id, array_intersect_key($in, ['price' => 1, 'stock' => 1, 'active' => 1]));
         ok();
